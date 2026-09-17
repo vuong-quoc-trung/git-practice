@@ -1,5 +1,10 @@
 # git-practice
 A simple project for practicing Git and GitHub commands.
+# what i will learn
+- some general principle and git commands
+- test git commands in a simple project
+- test some bug with git commands and find solutions
+- also learn and test some new languages and frameworks in this project
 
 # some general principle and git commands
 
