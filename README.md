@@ -69,3 +69,52 @@ A simple project for practicing Git and GitHub commands.
 6. Git add * ( not recommended)
    git add *
    -> Add all files in the current directory to the staging area, but it may not include hidden files or files in subdirectories.( * is a wildcard of shell, not a git command, it may not work as expected in some cases, so it's better to use git add . or git add -A instead.)
+
+
+# types of git commit
+1. Commit with a message
+   git commit -m "commit message"
+   -> Commit the staged changes (git add )with a message. 
+
+2. Commit with a message and all changes, including new files without git add
+   git commit -a -m "commit message"
+   -> Commit all changes (including modified, deleted files) with a message.
+
+3. Fix the last commit message
+   git commit --amend -m "new commit message"
+   -> Amend the last commit with a new message. This will replace the previous commit message.
+
+4. Commit the bug fix and point directly to the issue number
+   git commit -m "Fixes #123: bug fix description"
+   -> Commit the changes and link the commit to a specific issue number (e.g., #123) in the repository. This will automatically close the issue when the commit is pushed to the main branch.   
+
+5. Commit a hunk of a file
+   git commit -p file.txt -m "commit message"
+   -> Commit only specific changes (hunks) from a file with a message.
+
+# principles of git commit message
+
+1. add new feature: "feat: add new feature"
+2. fix a bug: "fix: fix a bug"
+3. update documentation: "docs: update documentation"
+4. update code style: "style: update code style"
+5. refactor code: "refactor: refactor code"
+6. add a test: "test: add a test"
+7. update build system: "build: update build system"
+8. update dependencies: "chore: update dependencies"
+9. revert a commit: "revert: revert a commit"
+10. update configuration: "config: update configuration"
+11. update translation: "i18n: update translation"
+12. update performance: "perf: update performance"
+13. update security: "security: update security"
+14. update accessibility: "accessibility: update accessibility"
+15. update internationalization: "l10n: update internationalization"
+16. update localization: "l10n: update localization"
+17. update logging: "log: update logging"
+18. update monitoring: "monitor: update monitoring"
+19. update analytics: "analytics: update analytics"
+20. update testing: "test: update testing"
+21. update deployment: "deploy: update deployment"
+22. update CI/CD: "ci: update CI/CD"
+23. update release notes: "release: update release notes"
+24. update version: "version: update version"
