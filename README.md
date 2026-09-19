@@ -118,3 +118,34 @@ A simple project for practicing Git and GitHub commands.
 22. update CI/CD: "ci: update CI/CD"
 23. update release notes: "release: update release notes"
 24. update version: "version: update version"
+
+
+# types of git stash
+
+1. Stash changes
+   git stash
+   -> Stash the changes in the working directory and index (staging area) to a new stash.
+
+2. Stash changes with a message
+   git stash save "stash message"
+   -> Stash the changes in the working directory and index (staging area) to a new stash with a message.
+
+3. Stash changes and include untracked files
+   git stash -u
+   -> Stash the changes in the working directory and index (staging area) to a new stash, including untracked files.
+
+4. Restore stashed changes
+   git stash apply
+   -> Restore the most recent stashed changes to the working directory and index (staging area).
+
+5. Restore stashed changes and remove the stash
+   git stash pop
+   -> Restore the most recent stashed changes to the working directory and index (staging area), and remove the stash from the stash list.
+
+6. List stashes
+   git stash list
+   -> List all stashes in the repository.
+
+7. Restore a specific stash
+   git stash apply stash@{n}
+   -> Restore a specific stash (where n is the index of the stash in the list).
