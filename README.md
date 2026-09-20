@@ -7,10 +7,25 @@ A simple project for practicing Git and GitHub commands.
 - also learn and test some new languages and frameworks in this project
 
 # some general principle and git commands
+1. git rebase: a command to reapply commits on top of another base tip. It can be used to clean up the commit history, or to move a branch to a new base commit.
 
+2. git log --oneline --graph --decorate --all: a command to visualize the commit history in a compact and graphical way. It shows the commit hash, commit message, branch and tag names, and the relationship between commits.
 
+3. git tag: a command to create, list, delete, or verify tags in the repository. Tags are used to mark specific points in the commit history as important, such as releases or milestones.
 
+4. git diff: a command to show the differences between commits, branches, files, or the working directory. It can be used to see what changes have been made, or to compare different versions of the code.
 
+5. git revert: a command to create a new commit that undoes the changes made by a previous commit. It can be used to undo mistakes or to revert to a previous state of the code.
+
+6. git cherry-pick: a command to apply the changes introduced by an existing commit to the current branch. It can be used to selectively apply commits from one branch to another.
+
+7. git bisect: a command to find the commit that introduced a bug or regression by performing a binary search through the commit history. It can be used to identify the source of a problem in the code.
+
+8. git blame: a command to show the author and commit information for each line of a file. It can be used to track down who made a change, when it was made, and why.
+
+9. git clean: a command to remove untracked files and directories from the working directory. It can be used to clean up the repository and remove unnecessary files.
+
+10. git restore: a command to restore files in the working directory and index (staging area) to a previous state. It can be used to discard changes or to recover lost files.
 
 # types of git clone
 1. Normal clone
@@ -154,3 +169,18 @@ A simple project for practicing Git and GitHub commands.
 7. Restore a specific stash
    git stash apply stash@{n}
    -> Restore a specific stash (where n is the index of the stash in the list).
+
+# git reset: a command to undo changes in the working directory and index (staging area) and move the HEAD pointer to a previous commit. ( have 3 modes: soft, mixed, hard)
+
+1. Soft reset
+   git reset --soft HEAD~1
+   -> Move the HEAD pointer to the previous commit, but keep the changes in the working directory and index (staging area).
+
+2. Mixed reset (default)
+   git reset --mixed HEAD~1
+   -> Move the HEAD pointer to the previous commit, and reset the index (staging area) to match the previous commit, but keep the changes in the working directory.
+
+3. Hard reset
+   git reset --hard HEAD~1
+   -> Move the HEAD pointer to the previous commit, and reset the index (staging area) and working directory to match the previous commit. This will discard all changes in the working directory and index (staging area).
+
