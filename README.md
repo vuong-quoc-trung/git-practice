@@ -205,3 +205,27 @@ A simple project for practicing Git and GitHub commands.
    git checkout commit-hash
    git switch --detach commit-hash
    -> Detach the HEAD and switch to the specified commit. This will put the repository in a "detached HEAD" state, where you can view or modify the code at that commit, but any new commits will not be associated with a branch.
+
+
+# git remote: a command to manage remote repositories, which are versions of the repository hosted on a server or another location.
+
+1. Add a remote repository
+   git remote add origin URL
+   -> Add a new remote repository with the name "origin" and the specified URL.
+
+2. Remove a remote repository
+   git remote remove origin
+   -> Remove the remote repository with the name "origin".
+
+3. Show status of remote repositories
+   git remote show origin
+   -> Show the status of the remote repository with the name "origin", including its URL, branches, and tracking information.
+
+4. List remote repositories
+   git remote -v
+   -> List all remote repositories and their URLs.
+
+5. Change the URL of a remote repository
+   git remote set-url origin new-URL
+   -> Change the URL of the remote repository with the name "origin" to the specified new URL.
+
