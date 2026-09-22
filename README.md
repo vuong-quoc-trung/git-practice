@@ -179,3 +179,29 @@ A simple project for practicing Git and GitHub commands.
    git reset --hard HEAD~1
    -> Move the HEAD pointer to the previous commit, and reset the index (staging area) and working directory to match the previous commit. This will discard all changes in the working directory and index (staging area).
 
+# git checkout and git switch: a command to switch branches or restore files in the working directory and index (staging area) to a previous state.
+
+1. Switch to a branch
+   git checkout branch-name 
+   git switch branch-name
+   -> Switch to the specified branch.
+
+2. Create and switch to a new branch
+   git checkout -b new-branch-name
+   git switch -c new-branch-name
+   -> Create a new branch and switch to it.
+
+3. Restore a file to the last committed state
+   git checkout -- file.txt
+   git switch -- file.txt
+   -> Restore the specified file in the working directory and index (staging area) to the last committed state.   
+
+4. Create a new branch from a specific commit
+   git checkout -b new-branch-name commit-hash
+   git switch -c new-branch-name commit-hash
+   -> Create a new branch from the specified commit and switch to it.
+
+5. Detach HEAD and switch to a specific commit
+   git checkout commit-hash
+   git switch --detach commit-hash
+   -> Detach the HEAD and switch to the specified commit. This will put the repository in a "detached HEAD" state, where you can view or modify the code at that commit, but any new commits will not be associated with a branch.
