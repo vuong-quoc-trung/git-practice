@@ -22,6 +22,10 @@ A simple project for practicing Git and GitHub commands.
 
 10. git restore: a command to restore files in the working directory and index (staging area) to a previous state. It can be used to discard changes or to recover lost files.
 
+11. git relog: a command to show the commit history of a file or directory. It can be used to see how a file has changed over time, and who made those changes.
+
+12. git pull: combines git fetch and git merge to update the local repository with changes from a remote repository. It can be used to keep the local branch up-to-date with the remote branch.
+
 # types of git clone
 1. Normal clone
    git clone URL
@@ -228,4 +232,3 @@ A simple project for practicing Git and GitHub commands.
 5. Change the URL of a remote repository
    git remote set-url origin new-URL
    -> Change the URL of the remote repository with the name "origin" to the specified new URL.
-
