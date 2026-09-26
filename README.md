@@ -1,5 +1,13 @@
 # git-practice
 A simple project for practicing Git and GitHub commands.
+<<<<<<<<< Temporary merge branch 1
+# what i will learn
+- some general principle and git commands
+- test git commands in a simple project
+- test some bug with git commands and find solutions
+- also learn and test some new languages and frameworks in this project
+=========
+>>>>>>>>> Temporary merge branch 2
 
 # some general principle and git commands
 1. git rebase: a command to reapply commits on top of another base tip. It can be used to clean up the commit history, or to move a branch to a new base commit.
@@ -232,7 +240,7 @@ A simple project for practicing Git and GitHub commands.
 5. Change the URL of a remote repository
    git remote set-url origin new-URL
    -> Change the URL of the remote repository with the name "origin" to the specified new URL.
-
+>>>>>>>>> Temporary merge branch 2
 
 # rust demo:
 ![alt text](image.png)
