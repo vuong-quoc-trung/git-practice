@@ -237,6 +237,9 @@ A simple project for practicing Git and GitHub commands.
 5. Change the URL of a remote repository
    git remote set-url origin new-URL
    -> Change the URL of the remote repository with the name "origin" to the specified new URL.
+<<<<<<<<< Temporary merge branch 1
+=========
+
 
 # rust demo:
 ![alt text](image.png)
