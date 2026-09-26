@@ -1,10 +1,5 @@
 # git-practice
 A simple project for practicing Git and GitHub commands.
-# what i will learn
-- some general principle and git commands
-- test git commands in a simple project
-- test some bug with git commands and find solutions
-- also learn and test some new languages and frameworks in this project
 
 # some general principle and git commands
 1. git rebase: a command to reapply commits on top of another base tip. It can be used to clean up the commit history, or to move a branch to a new base commit.
@@ -26,6 +21,10 @@ A simple project for practicing Git and GitHub commands.
 9. git clean: a command to remove untracked files and directories from the working directory. It can be used to clean up the repository and remove unnecessary files.
 
 10. git restore: a command to restore files in the working directory and index (staging area) to a previous state. It can be used to discard changes or to recover lost files.
+
+11. git relog: a command to show the commit history of a file or directory. It can be used to see how a file has changed over time, and who made those changes.
+
+12. git pull: combines git fetch and git merge to update the local repository with changes from a remote repository. It can be used to keep the local branch up-to-date with the remote branch.
 
 # types of git clone
 1. Normal clone
@@ -184,3 +183,52 @@ A simple project for practicing Git and GitHub commands.
    git reset --hard HEAD~1
    -> Move the HEAD pointer to the previous commit, and reset the index (staging area) and working directory to match the previous commit. This will discard all changes in the working directory and index (staging area).
 
+# git checkout and git switch: a command to switch branches or restore files in the working directory and index (staging area) to a previous state.
+
+1. Switch to a branch
+   git checkout branch-name 
+   git switch branch-name
+   -> Switch to the specified branch.
+
+2. Create and switch to a new branch
+   git checkout -b new-branch-name
+   git switch -c new-branch-name
+   -> Create a new branch and switch to it.
+
+3. Restore a file to the last committed state
+   git checkout -- file.txt
+   git switch -- file.txt
+   -> Restore the specified file in the working directory and index (staging area) to the last committed state.   
+
+4. Create a new branch from a specific commit
+   git checkout -b new-branch-name commit-hash
+   git switch -c new-branch-name commit-hash
+   -> Create a new branch from the specified commit and switch to it.
+
+5. Detach HEAD and switch to a specific commit
+   git checkout commit-hash
+   git switch --detach commit-hash
+   -> Detach the HEAD and switch to the specified commit. This will put the repository in a "detached HEAD" state, where you can view or modify the code at that commit, but any new commits will not be associated with a branch.
+
+
+# git remote: a command to manage remote repositories, which are versions of the repository hosted on a server or another location.
+
+1. Add a remote repository
+   git remote add origin URL
+   -> Add a new remote repository with the name "origin" and the specified URL.
+
+2. Remove a remote repository
+   git remote remove origin
+   -> Remove the remote repository with the name "origin".
+
+3. Show status of remote repositories
+   git remote show origin
+   -> Show the status of the remote repository with the name "origin", including its URL, branches, and tracking information.
+
+4. List remote repositories
+   git remote -v
+   -> List all remote repositories and their URLs.
+
+5. Change the URL of a remote repository
+   git remote set-url origin new-URL
+   -> Change the URL of the remote repository with the name "origin" to the specified new URL.
