@@ -1,0 +1,100 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - test/unit-test
+      - test/rust
+  pull_request:
+    branches:
+      - main
+      - develop
+      - test/unit-test
+      - test/rust
+  workflow_dispatch:
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # 1. Job kiểm tra Java Spring Boot (cho test/unit-test, main, develop, ...)
+  # ---------------------------------------------------------------------------
+  java-test:
+    name: Java Spring Boot - Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Kiểm tra sự tồn tại của thư mục unit-test
+        id: check_java
+        run: |
+          if [ -f "unit-test/pom.xml" ]; then
+            echo "has_java=true" >> "$GITHUB_OUTPUT"
+            echo "Đã tìm thấy dự án unit-test."
+          else
+            echo "has_java=false" >> "$GITHUB_OUTPUT"
+            echo "Không có thư mục unit-test trên nhánh này. Bỏ qua job Java."
+          fi
+
+      - name: Cài đặt JDK 25
+        if: steps.check_java.outputs.has_java == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Cấp quyền thực thi cho Maven Wrapper
+        if: steps.check_java.outputs.has_java == 'true'
+        run: chmod +x unit-test/mvnw
+
+      - name: Chạy Unit Test và Kiểm tra biên dịch Maven
+        if: steps.check_java.outputs.has_java == 'true'
+        working-directory: unit-test
+        run: ./mvnw clean test
+
+  # ---------------------------------------------------------------------------
+  # 2. Job kiểm tra Rust (cho test/rust, main, develop, ...)
+  # ---------------------------------------------------------------------------
+  rust-check:
+    name: Rust - Check & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Kiểm tra sự tồn tại của dự án Rust
+        id: check_rust
+        run: |
+          if [ -d "learn-rust" ] || [ -f "pbl4-security-demo/Cargo.toml" ]; then
+            echo "has_rust=true" >> "$GITHUB_OUTPUT"
+            echo "Đã tìm thấy mã nguồn Rust."
+          else
+            echo "has_rust=false" >> "$GITHUB_OUTPUT"
+            echo "Không có mã nguồn Rust trên nhánh này. Bỏ qua job Rust."
+          fi
+
+      - name: Cài đặt Rust toolchain
+        if: steps.check_rust.outputs.has_rust == 'true'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Kiểm tra và biên dịch learn-rust/test1.rs
+        if: steps.check_rust.outputs.has_rust == 'true'
+        run: |
+          if [ -f "learn-rust/test1.rs" ]; then
+            echo "--> Biên dịch learn-rust/test1.rs..."
+            rustc learn-rust/test1.rs -o /tmp/rust_test1
+            echo "--> Chạy thử file nhị phân..."
+            /tmp/rust_test1
+          fi
+
+      - name: Kiểm tra Cargo project (pbl4-security-demo)
+        if: steps.check_rust.outputs.has_rust == 'true'
+        run: |
+          if [ -f "pbl4-security-demo/Cargo.toml" ]; then
+            echo "--> Chạy cargo check cho pbl4-security-demo..."
+            cargo check --manifest-path pbl4-security-demo/Cargo.toml
+          fi
