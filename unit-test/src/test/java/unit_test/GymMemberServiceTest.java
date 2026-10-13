@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -97,5 +98,58 @@ public class GymMemberServiceTest {
         });
 
         verify(gymMemberRepository, never()).save(any(GymMember.class));
+    }
+    @Test
+    void testGetAllMembers() {
+        // 1. Arrange
+        GymMember member1 = new GymMember();
+        member1.setId(1L);
+        member1.setFullName("Nguyen Van A");
+        member1.setEmail("trung@example.com");
+        member1.setPhone("0912345678");
+        member1.setPlanType(MembershipPlan.BASIC);
+        member1.setStartDate(today);
+        member1.setEndDate(today.plusMonths(1));
+
+        GymMember member2 = new GymMember();
+        member2.setId(2L);
+        member2.setFullName("Tran Van B");
+        member2.setEmail("hieu@example.com");
+        member2.setPhone("0987654321");
+        member2.setPlanType(MembershipPlan.PREMIUM);
+        member2.setStartDate(today);
+        member2.setEndDate(today.plusMonths(1));
+
+        when(gymMemberRepository.findAll()).thenReturn(List.of(member1, member2));
+
+        // 2. Act
+        List<GymMemberResponse> responses = gymMemberService.getAllMembers();
+
+        // 3. Assert
+        assertNotNull(responses);
+        assertEquals(2, responses.size());
+        assertEquals("Nguyen Van A", responses.get(0).getFullName());
+        assertEquals("Tran Van B", responses.get(1).getFullName());
+        assertEquals("trung@example.com", responses.get(0).getEmail());
+        assertEquals("hieu@example.com", responses.get(1).getEmail());
+        assertEquals("0912345678", responses.get(0).getPhone());
+        assertEquals("0987654321", responses.get(1).getPhone());
+        assertEquals(MembershipPlan.BASIC, responses.get(0).getPlanType());
+        assertEquals(MembershipPlan.PREMIUM, responses.get(1).getPlanType());
+        verify(gymMemberRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testGetAllMembers_WhenNoMembersExist() {
+        // 1. Arrange: Giả lập database chưa có hội viên nào
+        when(gymMemberRepository.findAll()).thenReturn(List.of());
+
+        // 2. Act
+        List<GymMemberResponse> responses = gymMemberService.getAllMembers();
+
+        // 3. Assert: Danh sách trả về không được null và phải rỗng
+        assertNotNull(responses);
+        assertTrue(responses.isEmpty());
+        verify(gymMemberRepository, times(1)).findAll();
     }
 }
