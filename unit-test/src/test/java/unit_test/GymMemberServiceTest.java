@@ -8,6 +8,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import unit_test.dto.GymMemberRequest;
 import unit_test.dto.GymMemberResponse;
 import unit_test.exception.DuplicateResourceException;
+import unit_test.exception.ResourceNotFoundException;
 import unit_test.model.GymMember;
 import unit_test.model.MembershipPlan;
 import unit_test.repository.GymMemberRepository;
@@ -151,5 +153,50 @@ public class GymMemberServiceTest {
         assertNotNull(responses);
         assertTrue(responses.isEmpty());
         verify(gymMemberRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testGetMemberById_Success() {
+        // 1. Arrange: Chuẩn bị dữ liệu hội viên mẫu và mock repository tìm thấy hội viên theo ID
+        GymMember member = new GymMember(
+                1L,
+                "Nguyen Van A",
+                "an@example.com",
+                "0905123456",
+                MembershipPlan.BASIC,
+                today,
+                today.plusMonths(1).minusDays(1)
+        );
+
+        when(gymMemberRepository.findById(1L)).thenReturn(Optional.of(member));
+
+        // 2. Act: Gọi phương thức lấy chi tiết hội viên theo ID
+        GymMemberResponse response = gymMemberService.getMemberById(1L);
+
+        // 3. Assert: Kiểm tra đầy đủ thông tin trả về
+        assertNotNull(response);
+        assertEquals(1L, response.getId());
+        assertEquals("Nguyen Van A", response.getFullName());
+        assertEquals("an@example.com", response.getEmail());
+        assertEquals("0905123456", response.getPhone());
+        assertEquals(MembershipPlan.BASIC, response.getPlanType());
+        assertEquals(today, response.getStartDate());
+        assertEquals(today.plusMonths(1).minusDays(1), response.getEndDate());
+
+        verify(gymMemberRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testGetMemberById_ThrowsException_WhenNotFound() {
+        // 1. Arrange: Giả lập repository không tìm thấy ID = 999L
+        when(gymMemberRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // 2 & 3. Act & Assert: Kỳ vọng ném ngoại lệ ResourceNotFoundException
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            gymMemberService.getMemberById(999L);
+        });
+
+        assertTrue(exception.getMessage().contains("999"));
+        verify(gymMemberRepository, times(1)).findById(999L);
     }
 }
