@@ -199,4 +199,97 @@ public class GymMemberServiceTest {
         assertTrue(exception.getMessage().contains("999"));
         verify(gymMemberRepository, times(1)).findById(999L);
     }
+
+    @Test 
+    void updateMember_Success() {
+        // 1. Arrange: 
+        GymMember oldMember = new GymMember(
+                1L,
+                "Nguyen Van A",
+                "an@example.com",
+                "0905123456",
+                MembershipPlan.BASIC,
+                today,
+                today.plusMonths(1).minusDays(1)
+        );
+
+        GymMemberRequest updateRequest = new GymMemberRequest();
+        updateRequest.setFullName("Nguyen Van Update");
+        updateRequest.setEmail("an.new@example.com");
+        updateRequest.setPhone("0999888777");
+        updateRequest.setPlanType(MembershipPlan.PREMIUM);
+
+        when(gymMemberRepository.findById(1L)).thenReturn(Optional.of(oldMember));
+        when(gymMemberRepository.existsByEmailAndIdNot(updateRequest.getEmail(), 1L)).thenReturn(false);
+        when(gymMemberRepository.save(any(GymMember.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // 2. Act
+        GymMemberResponse response = gymMemberService.updateMember(1L, updateRequest);
+
+        // 3. Assert
+        assertNotNull(response);
+        assertEquals(1L, response.getId());
+        assertEquals("Nguyen Van Update", response.getFullName());
+        assertEquals("an.new@example.com", response.getEmail());
+        assertEquals("0999888777", response.getPhone());
+        assertEquals(MembershipPlan.PREMIUM, response.getPlanType());
+        assertEquals(today, response.getStartDate());
+        assertEquals(today.plusMonths(1).minusDays(1), response.getEndDate());
+
+        verify(gymMemberRepository, times(1)).findById(1L);
+        verify(gymMemberRepository, times(1)).save(any(GymMember.class));
+    }
+
+    @Test
+    void updateMember_ThrowsException_WhenMemberNotFound() {
+        // 1. Arrange: ID = 999L không tồn tại trong hệ thống
+        GymMemberRequest request = new GymMemberRequest();
+        request.setFullName("Nguyen Van A");
+        request.setEmail("an@example.com");
+        request.setPhone("0905123456");
+        request.setPlanType(MembershipPlan.BASIC);
+
+        when(gymMemberRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // 2 & 3. Act & Assert: Kỳ vọng ném lỗi ResourceNotFoundException
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> {
+            gymMemberService.updateMember(999L, request);
+        });
+
+        assertTrue(ex.getMessage().contains("999"));
+        verify(gymMemberRepository, times(1)).findById(999L);
+        verify(gymMemberRepository, never()).save(any(GymMember.class));
+    }
+
+    @Test
+    void updateMember_ThrowsException_WhenEmailAlreadyExists() {
+        // 1. Arrange: Tìm thấy hội viên ID = 1L, nhưng email mới bị trùng với hội viên khác
+        GymMember member = new GymMember(
+                1L,
+                "Nguyen Van A",
+                "an@example.com",
+                "0905123456",
+                MembershipPlan.BASIC,
+                today,
+                today.plusMonths(1).minusDays(1)
+        );
+
+        GymMemberRequest request = new GymMemberRequest();
+        request.setFullName("Nguyen Van A");
+        request.setEmail("trung@example.com"); // Email bị trùng với người khác
+        request.setPhone("0905123456");
+        request.setPlanType(MembershipPlan.BASIC);
+
+        when(gymMemberRepository.findById(1L)).thenReturn(Optional.of(member));
+        when(gymMemberRepository.existsByEmailAndIdNot("trung@example.com", 1L)).thenReturn(true);
+
+        // 2 & 3. Act & Assert: Kỳ vọng ném lỗi DuplicateResourceException
+        DuplicateResourceException ex = assertThrows(DuplicateResourceException.class, () -> {
+            gymMemberService.updateMember(1L, request);
+        });
+
+        assertTrue(ex.getMessage().contains("trung@example.com"));
+        verify(gymMemberRepository, times(1)).findById(1L);
+        verify(gymMemberRepository, never()).save(any(GymMember.class));
+    }
 }
