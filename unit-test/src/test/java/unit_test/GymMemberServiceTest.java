@@ -292,4 +292,47 @@ public class GymMemberServiceTest {
         verify(gymMemberRepository, times(1)).findById(1L);
         verify(gymMemberRepository, never()).save(any(GymMember.class));
     }
+
+    @Test 
+    void deleteMember_Success() {
+        // 1. Arrange: 
+        GymMember member = new GymMember(
+            1L,
+            "Nguyen Van A",
+            "an@example.com",
+            "0905123456",
+            MembershipPlan.BASIC,
+            today,
+            today.plusMonths(1).minusDays(1)
+    );   
+
+    when(gymMemberRepository.findById(1L)).thenReturn(Optional.of(member));
+
+    // 2. Act
+    gymMemberService.deleteMember(1L);
+
+    // 3. Assert
+    verify(gymMemberRepository, times(1)).findById(1L);
+    verify(gymMemberRepository, times(1)).delete(member);
+    }
+
+    @Test 
+    void isMemberActive_Active() {
+            // 1. Arrange: 
+        GymMember member = new GymMember(
+            1L,
+            "Nguyen Van A",
+            "an@example.com",
+            "0905123456",
+            MembershipPlan.BASIC,
+            today,
+            today.plusMonths(1).minusDays(1)
+    );   
+
+    // 2. Act
+    boolean isActive = gymMemberService.isMemberActive(member);
+
+    // 3. Assert
+    assertTrue(isActive);
+    }
 }
