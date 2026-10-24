@@ -13,9 +13,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import jakarta.validation.constraints.AssertTrue;
 import unit_test.dto.GymMemberRequest;
 import unit_test.dto.GymMemberResponse;
+import unit_test.exception.BadRequestException;
 import unit_test.exception.DuplicateResourceException;
 import unit_test.exception.ResourceNotFoundException;
 import unit_test.model.GymMember;
@@ -332,7 +336,105 @@ public class GymMemberServiceTest {
     // 2. Act
     boolean isActive = gymMemberService.isMemberActive(member);
 
-    // 3. Assert
+    // 3. Assert 
     assertTrue(isActive);
+    }
+
+    @Test
+    void renewMembership_Success_WhenActive() {
+        // 1. Arrange: Hội viên đang còn hạn
+        LocalDate initialEndDate = today.plusMonths(1).minusDays(1);
+        GymMember member = new GymMember(
+                1L,
+                "Nguyen Van A",
+                "an@example.com",
+                "0905123456",
+                MembershipPlan.BASIC,
+                today,
+                initialEndDate
+        );
+
+        when(gymMemberRepository.findById(1L)).thenReturn(Optional.of(member));
+        when(gymMemberRepository.save(any(GymMember.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // 2. Act: Gia hạn thêm 3 tháng
+        int renewMonths = 3;
+        GymMemberResponse response = gymMemberService.renewMembership(1L, renewMonths);
+
+        // 3. Assert: 
+        // Quy tắc 12: Nếu hội viên còn hạn, gia hạn nối tiếp: endDate mới = endDate cũ + số tháng gia hạn
+        LocalDate expectedEndDate = initialEndDate.plusMonths(renewMonths);
+
+        assertNotNull(response);
+        assertEquals(1L, response.getId());
+        assertEquals(expectedEndDate, response.getEndDate());
+        assertEquals(today, response.getStartDate()); // Ngày bắt đầu không bị thay đổi (Quy tắc 12, 14)
+
+        verify(gymMemberRepository, times(1)).findById(1L);
+        verify(gymMemberRepository, times(1)).save(any(GymMember.class));
+    }
+
+    @Test
+    void renewMembership_Success_WhenExpired() {
+        // 1. Arrange: Hội viên đã hết hạn từ trước (ví dụ hết hạn từ 1 tháng trước)
+        LocalDate oldStartDate = today.minusMonths(2);
+        LocalDate oldEndDate = today.minusMonths(1);
+        GymMember member = new GymMember(
+                1L,
+                "Nguyen Van A",
+                "an@example.com",
+                "0905123456",
+                MembershipPlan.BASIC,
+                oldStartDate,
+                oldEndDate
+        );
+
+        when(gymMemberRepository.findById(1L)).thenReturn(Optional.of(member));
+        when(gymMemberRepository.save(any(GymMember.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // 2. Act: Gia hạn 2 tháng
+        int renewMonths = 2;
+        GymMemberResponse response = gymMemberService.renewMembership(1L, renewMonths);
+
+        // 3. Assert:
+        // Quy tắc 13: Nếu hội viên đã hết hạn, thời hạn mới tính từ ngày hiện tại: 
+        // endDate mới = today + số tháng gia hạn - 1 ngày
+        LocalDate expectedEndDate = today.plusMonths(renewMonths).minusDays(1);
+
+        assertNotNull(response);
+        assertEquals(1L, response.getId());
+        assertEquals(expectedEndDate, response.getEndDate());
+
+        verify(gymMemberRepository, times(1)).findById(1L);
+        verify(gymMemberRepository, times(1)).save(any(GymMember.class));
+    }
+
+    @Test
+    void renewMembership_ThrowsException_WhenInvalidMonths() {
+        // 1. Arrange & 2. Act & 3. Assert:
+        // Quy tắc 11: Cho phép gia hạn từ 1 đến 12 tháng. Nếu số tháng < 1 hoặc > 12 -> lỗi BadRequestException
+        assertThrows(BadRequestException.class, () -> {
+            gymMemberService.renewMembership(1L, 0); // Nhỏ hơn 1
+        });
+
+        assertThrows(BadRequestException.class, () -> {
+            gymMemberService.renewMembership(1L, -5); // Số âm
+        });
+
+        verify(gymMemberRepository, never()).save(any(GymMember.class));
+    }
+
+    @Test
+    void renewMembership_ThrowsException_WhenMemberNotFound() {
+        // 1. Arrange: Không tìm thấy hội viên ID = 999L
+        when(gymMemberRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // 2 & 3. Act & Assert: Quy tắc 15 -> 404 ResourceNotFoundException
+        assertThrows(ResourceNotFoundException.class, () -> {
+            gymMemberService.renewMembership(999L, 3);
+        });
+
+        verify(gymMemberRepository, times(1)).findById(999L);
+        verify(gymMemberRepository, never()).save(any(GymMember.class));
     }
 }
