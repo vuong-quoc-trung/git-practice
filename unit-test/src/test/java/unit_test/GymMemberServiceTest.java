@@ -16,7 +16,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import jakarta.validation.constraints.AssertTrue;
 import unit_test.dto.GymMemberRequest;
 import unit_test.dto.GymMemberResponse;
 import unit_test.exception.BadRequestException;
@@ -320,9 +319,23 @@ public class GymMemberServiceTest {
     verify(gymMemberRepository, times(1)).delete(member);
     }
 
+    @Test
+    void deleteMember_ThrowsException_WhenMemberNotFound() {
+        // 1. Arrange: ID không tồn tại
+        when(gymMemberRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // 2 & 3. Act & Assert: Quy tắc 15 -> 404 ResourceNotFoundException
+        assertThrows(ResourceNotFoundException.class, () -> {
+            gymMemberService.deleteMember(999L);
+        });
+
+        verify(gymMemberRepository, times(1)).findById(999L);
+        verify(gymMemberRepository, never()).delete(any(GymMember.class));
+    }
+
     @Test 
     void isMemberActive_Active() {
-            // 1. Arrange: 
+        // 1. Arrange: 
         GymMember member = new GymMember(
             1L,
             "Nguyen Van A",
@@ -331,13 +344,73 @@ public class GymMemberServiceTest {
             MembershipPlan.BASIC,
             today,
             today.plusMonths(1).minusDays(1)
-    );   
+        );   
 
-    // 2. Act
-    boolean isActive = gymMemberService.isMemberActive(member);
+        // 2. Act
+        boolean isActive = gymMemberService.isMemberActive(member);
 
-    // 3. Assert 
-    assertTrue(isActive);
+        // 3. Assert 
+        assertTrue(isActive);
+    }
+
+    @Test
+    void isMemberActive_WhenTodayIsEndDate_ShouldReturnTrue() {
+        // Quy tắc 9: Còn hạn khi ngày hiện tại nằm trong khoảng từ startDate đến endDate, tính cả hai đầu mốc.
+        // Tại mốc endDate, hội viên VẪN PHẢI ĐƯỢC XEM LÀ CÒN HẠN (true).
+        GymMember member = new GymMember(
+                1L,
+                "Nguyen Van A",
+                "an@example.com",
+                "0905123456",
+                MembershipPlan.BASIC,
+                today.minusMonths(1).plusDays(1),
+                today // Hôm nay chính là ngày hết hạn (endDate)
+        );
+
+        boolean isActive = gymMemberService.isMemberActive(member);
+        assertTrue(isActive, "Tại đúng ngày hết hạn (endDate), hội viên phải còn hạn theo Quy tắc 9!");
+    }
+
+    @Test
+    void isMemberActive_WhenTodayIsAfterEndDate_ShouldReturnFalse() {
+        // Quy tắc 10: Đã quá ngày hết hạn -> không còn hiệu lực (false)
+        GymMember member = new GymMember(
+                1L,
+                "Nguyen Van A",
+                "an@example.com",
+                "0905123456",
+                MembershipPlan.BASIC,
+                today.minusMonths(2),
+                today.minusDays(1) // Đã hết hạn ngày hôm qua
+        );
+
+        boolean isActive = gymMemberService.isMemberActive(member);
+        assertFalse(isActive);
+    }
+
+    @Test
+    void isMemberActive_WhenTodayIsBeforeStartDate_ShouldReturnFalse() {
+        // Quy tắc 10: Chưa đến ngày bắt đầu (nằm trong tương lai) -> không còn hiệu lực (false)
+        GymMember member = new GymMember(
+                1L,
+                "Nguyen Van A",
+                "an@example.com",
+                "0905123456",
+                MembershipPlan.BASIC,
+                today.plusDays(1), // Ngày mai mới bắt đầu
+                today.plusMonths(1)
+        );
+
+        boolean isActive = gymMemberService.isMemberActive(member);
+        assertFalse(isActive);
+    }
+
+    @Test
+    void isMemberActive_WhenMemberOrDatesNull_ShouldReturnFalse() {
+        assertFalse(gymMemberService.isMemberActive(null));
+
+        GymMember memberWithoutDates = new GymMember();
+        assertFalse(gymMemberService.isMemberActive(memberWithoutDates));
     }
 
     @Test
@@ -397,21 +470,47 @@ public class GymMemberServiceTest {
         GymMemberResponse response = gymMemberService.renewMembership(1L, renewMonths);
 
         // 3. Assert:
-        // Quy tắc 13: Nếu hội viên đã hết hạn, thời hạn mới tính từ ngày hiện tại: 
+        // Quy tắc 13: Nếu hội viên đã hết hạn, thời hạn mới bắt đầu từ ngày hiện tại (startDate mới = today); 
         // endDate mới = today + số tháng gia hạn - 1 ngày
         LocalDate expectedEndDate = today.plusMonths(renewMonths).minusDays(1);
 
         assertNotNull(response);
         assertEquals(1L, response.getId());
         assertEquals(expectedEndDate, response.getEndDate());
+        assertEquals(today, response.getStartDate(), "Quy tắc 13: Khi hết hạn, thời hạn mới bắt đầu từ ngày hiện tại (startDate phải là today)!");
 
         verify(gymMemberRepository, times(1)).findById(1L);
         verify(gymMemberRepository, times(1)).save(any(GymMember.class));
     }
 
     @Test
+    void renewMembership_Success_WhenRenew12Months() {
+        // Quy tắc 11: Cho phép gia hạn số tháng nguyên từ 1 đến 12.
+        // Gia hạn 12 tháng là hợp lệ và phải thành công!
+        LocalDate initialEndDate = today.plusMonths(1).minusDays(1);
+        GymMember member = new GymMember(
+                1L,
+                "Nguyen Van A",
+                "an@example.com",
+                "0905123456",
+                MembershipPlan.BASIC,
+                today,
+                initialEndDate
+        );
+
+        when(gymMemberRepository.findById(1L)).thenReturn(Optional.of(member));
+        when(gymMemberRepository.save(any(GymMember.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        int renewMonths = 12;
+        GymMemberResponse response = gymMemberService.renewMembership(1L, renewMonths);
+
+        assertNotNull(response);
+        assertEquals(initialEndDate.plusMonths(12), response.getEndDate());
+        verify(gymMemberRepository, times(1)).save(any(GymMember.class));
+    }
+
+    @Test
     void renewMembership_ThrowsException_WhenInvalidMonths() {
-        // 1. Arrange & 2. Act & 3. Assert:
         // Quy tắc 11: Cho phép gia hạn từ 1 đến 12 tháng. Nếu số tháng < 1 hoặc > 12 -> lỗi BadRequestException
         assertThrows(BadRequestException.class, () -> {
             gymMemberService.renewMembership(1L, 0); // Nhỏ hơn 1
@@ -419,6 +518,10 @@ public class GymMemberServiceTest {
 
         assertThrows(BadRequestException.class, () -> {
             gymMemberService.renewMembership(1L, -5); // Số âm
+        });
+
+        assertThrows(BadRequestException.class, () -> {
+            gymMemberService.renewMembership(1L, 13); // Lớn hơn 12
         });
 
         verify(gymMemberRepository, never()).save(any(GymMember.class));
@@ -436,5 +539,24 @@ public class GymMemberServiceTest {
 
         verify(gymMemberRepository, times(1)).findById(999L);
         verify(gymMemberRepository, never()).save(any(GymMember.class));
+    }
+
+    @Test
+    void toResponse_CalculatesMonthlyFeeCorrectly() {
+        // Quy tắc 5: Giá gói BASIC là 300.000 VND
+        // Quy tắc 6: Giá gói PREMIUM là 500.000 VND
+        GymMember basicMember = new GymMember(
+                1L, "Basic Member", "basic@example.com", "0900000001",
+                MembershipPlan.BASIC, today, today.plusMonths(1).minusDays(1)
+        );
+        GymMemberResponse basicResponse = gymMemberService.toResponse(basicMember);
+        assertEquals(300_000L, basicResponse.getMonthlyFee());
+
+        GymMember premiumMember = new GymMember(
+                2L, "Premium Member", "premium@example.com", "0900000002",
+                MembershipPlan.PREMIUM, today, today.plusMonths(1).minusDays(1)
+        );
+        GymMemberResponse premiumResponse = gymMemberService.toResponse(premiumMember);
+        assertEquals(500_000L, premiumResponse.getMonthlyFee());
     }
 }
